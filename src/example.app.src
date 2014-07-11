@@ -1,0 +1,18 @@
+{application, example, [
+	{description, "Pragmatic Authentication Library: example"},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		jsxn,
+		cowboy,
+		bcrypt,
+		pt_cowboy_session,
+		pal_google_oauth2,
+		pal_facebook_oauth2
+	]},
+	{mod, { example_app, []}},
+	{env, []}
+]}.
