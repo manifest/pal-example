@@ -5,7 +5,8 @@ all: build
 deps:
 	rebar get-deps
 
-build:
+include ranch-ssl-patch.mk
+build: ranch-ssl-patch
 	rebar compile
 
 build-plt:
