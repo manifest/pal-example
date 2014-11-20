@@ -4,7 +4,6 @@ all: build
 
 deps:
 	rebar get-deps
-	rebar update-deps
 
 build:
 	rebar compile
@@ -26,10 +25,13 @@ dialyze:
 		-Wrace_conditions \
 		-Wunmatched_returns 
 
-test: build
-	rebar -v skip_deps=true eunit
+xref:
+	rebar xref skip_deps=true
 
-test-total: dialyze test
+test: build
+	rebar -v eunit skip_deps=true
+
+test-total: dialyze xref test
 
 doc:
 	rebar doc skip_deps=true
