@@ -30,9 +30,9 @@ xref:
 	rebar xref skip_deps=true
 
 test: build
-	rebar -v eunit skip_deps=true
+	rebar eunit -v skip_deps=true
 
-test-total: dialyze xref test
+test-total: test xref dialyze
 
 doc:
 	rebar doc skip_deps=true

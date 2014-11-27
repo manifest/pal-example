@@ -24,23 +24,18 @@
 
 -module(example_oauth2_handler).
 
-%% Base handler callbacks
+%% API
 -export([
-	init/3
+	to_json/2
 ]).
 
 %% REST handler callbacks
 -export([
-	options/2,
-	rest_init/2,
+	init/2,
 	allowed_methods/2, 
 	is_authorized/2,
-	content_types_provided/2
-]).
-
-%% API
--export([
-	to_json/2
+	content_types_provided/2,
+	options/2
 ]).
 
 %% Definitions
@@ -52,24 +47,25 @@
 	user :: map()
 }).
 
-%% ==================================================================
-%% Base handler callbacks
-%% ==================================================================
+%% ===================================================================
+%% API
+%% ===================================================================
 
-init(_Transport, _Req, _Opts) ->
-	{upgrade, protocol, cowboy_rest}.
+to_json(Req, #state{user = User} = State) ->
+	Body = example:to_json(User, true),
+	{Body, Req, State}.
 
 %% ==================================================================
 %% REST handler callbacks
 %% ==================================================================
 
-rest_init(Req, Opts) ->
-	{Provider, Req2} = cowboy_req:binding(provider, Req),
+init(Req, Opts) ->
+	Provider = cowboy_req:binding(provider, Req),
 	State =
 		#state{
 			auth = pt_plist:get_in([auth, Provider], Opts)},
 
-	{ok, Req2, State}.
+	{cowboy_rest, Req, State}.
 
 allowed_methods(Req, State) ->
 	{[<<"GET">>, <<"OPTIONS">>], Req, State}.
@@ -78,21 +74,13 @@ is_authorized(Req, #state{auth = W} = State) ->
 	case pal:authenticate(Req, W) of
 		{M, Req2} when is_map(M) ->
 			{true, Req2, State#state{user = M}};
-		{halt, Req2} ->
-			{halt, Req2, State}
+		{stop, Req2} ->
+			{stop, Req2, State}
 	end.
-
-options(Req, State) ->
-	example:options(Req, State).
 
 content_types_provided(Req, State) ->
 	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
 
-%% ===================================================================
-%% API
-%% ===================================================================
-
-to_json(Req, #state{user = User} = State) ->
-	Body = example:to_json(User, true),
-	{Body, Req, State}.
+options(Req, State) ->
+	example_http:options(Req, State).
 

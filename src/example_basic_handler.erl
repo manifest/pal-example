@@ -24,28 +24,24 @@
 
 -module(example_basic_handler).
 
-%% Base handler callbacks
--export([
-	init/3
-]).
-
-%% REST handler callbacks
--export([
-	options/2,
-	rest_init/2,
-	allowed_methods/2, 
-	is_authorized/2,
-	content_types_accepted/2,
-	content_types_provided/2
-]).
-
 %% API
 -export([
 	to_json/2,
 	from_any/2
 ]).
 
+%% REST handler callbacks
+-export([
+	init/2,
+	allowed_methods/2, 
+	is_authorized/2,
+	content_types_accepted/2,
+	content_types_provided/2,
+	options/2
+]).
+
 %% Definitions
+-define(BASIC, <<"Basic">>).
 -define(CONTENT_TYPE, <<"content-type">>).
 
 %% Types
@@ -54,53 +50,6 @@
 	user   :: map(),
 	pretty :: boolean()
 }).
-
-%% ==================================================================
-%% Base handler callbacks
-%% ==================================================================
-
-init(_Transport, _Req, _Opts) ->
-	{upgrade, protocol, cowboy_rest}.
-
-%% ==================================================================
-%% REST handler callbacks
-%% ==================================================================
-
-rest_init(Req, Opts) ->
-	{Pretty, Req2} = example:qs_pretty(Req),
-	State =
-		#state{
-			auth = pt_mlist:get(auth, Opts),
-			pretty = Pretty},
-
-	{ok, Req2, State}.
-
-allowed_methods(Req, State) ->
-	{[<<"GET">>, <<"POST">>, <<"OPTIONS">>], Req, State}.
-
-is_authorized(Req, #state{auth = W} = State) ->
-	case pal:authenticate(Req, W) of
-		{#{uid := _} = M, Req2} ->
-			{true, Req2, State#state{user = M}};
-		{#{}, Req2} ->
-			{Path, Req3} = cowboy_req:path(Req2),
-			Challenge = <<"Basic realm=", Path/binary>>,
-			{{false, Challenge}, Req3, State};
-		{halt, Req2} ->
-			{halt, Req2, State}
-	end.
-
-options(Req, State) ->
-	example:options(Req, State).
-
-content_types_provided(Req, State) ->
-	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
-
-content_types_accepted(Req, State) ->
-	{[{{<<"application">>, <<"json">>, '*'}, from_any},
-		{{<<"application">>, <<"x-www-form-urlencoded">>, '*'}, from_any}
-	], Req, State}.
-
 
 %% ===================================================================
 %% API
@@ -121,4 +70,45 @@ from_any(Req, State) ->
 	{Body, Req2, State2} = to_json(Req, State),
 	Req3 = cowboy_req:set_resp_body(Body, Req2),
 	{true, Req3, State2}.
+
+%% ==================================================================
+%% REST handler callbacks
+%% ==================================================================
+
+init(Req, Opts) ->
+	#{pretty := Pretty} =
+		cowboy_req:match_qs(
+			[	{pretty, fun example_http:pretty_constraint/1} ],
+			Req),
+
+	State =
+		#state{
+			auth = pt_mlist:get(auth, Opts),
+			pretty = Pretty},
+
+	{cowboy_rest, Req, State}.
+
+allowed_methods(Req, State) ->
+	{[<<"GET">>, <<"POST">>, <<"OPTIONS">>], Req, State}.
+
+is_authorized(Req, #state{auth = W} = State) ->
+	case pal:authenticate(Req, W) of
+		{#{uid := _} = M, Req2} ->
+			{true, Req2, State#state{user = M}};
+		{#{}, Req2} ->
+			{{false, ?BASIC}, Req2, State};
+		{stop, Req2} ->
+			{stop, Req2, State}
+	end.
+
+content_types_provided(Req, State) ->
+	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
+
+content_types_accepted(Req, State) ->
+	{[{{<<"application">>, <<"json">>, '*'}, from_any},
+		{{<<"application">>, <<"x-www-form-urlencoded">>, '*'}, from_any}
+	], Req, State}.
+
+options(Req, State) ->
+	example_http:options(Req, State).
 

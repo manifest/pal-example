@@ -49,13 +49,13 @@ auth() ->
 		GlobalOpts
 			#{client_id     => pt_map:get_in([google, client_id], ProviderConf),
 				client_secret => pt_map:get_in([google, client_secret], ProviderConf),
-				redirect_uri  => example:uri("/examples/oauth2/google/callback")},
+				redirect_uri  => example_http:uri("/examples/oauth2/google/callback")},
 
 	FacebookOpts =
 		GlobalOpts
 			#{client_id     => pt_map:get_in([facebook, client_id], ProviderConf),
 				client_secret => pt_map:get_in([facebook, client_secret], ProviderConf),
-				redirect_uri  => example:uri("/examples/oauth2/facebook/callback")},
+				redirect_uri  => example_http:uri("/examples/oauth2/facebook/callback")},
 
 	GoogleW = pal:new([pal_google_oauth2_authcode, pal_google_oauth2_people], GoogleOpts),
 	FacebookW = pal:new([pal_facebook_oauth2_authcode, pal_facebook_oauth2_user], FacebookOpts),
