@@ -78,7 +78,7 @@ from_any(Req, State) ->
 init(Req, Opts) ->
 	#{pretty := Pretty} =
 		cowboy_req:match_qs(
-			[	{pretty, fun example_http:pretty_constraint/1} ],
+			[	{pretty, fun example_http:pretty_constraint/1, false} ],
 			Req),
 
 	State =
