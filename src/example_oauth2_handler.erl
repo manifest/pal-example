@@ -63,7 +63,7 @@ init(Req, Opts) ->
 	Provider = cowboy_req:binding(provider, Req),
 	State =
 		#state{
-			auth = pt_plist:get_in([auth, Provider], Opts)},
+			auth = pt_kvlist:get_in([auth, Provider], Opts)},
 
 	{cowboy_rest, Req, State}.
 

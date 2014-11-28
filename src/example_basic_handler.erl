@@ -83,7 +83,7 @@ init(Req, Opts) ->
 
 	State =
 		#state{
-			auth = pt_mlist:get(auth, Opts),
+			auth = pt_kvterm:get(auth, Opts),
 			pretty = Pretty},
 
 	{cowboy_rest, Req, State}.

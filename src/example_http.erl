@@ -70,7 +70,7 @@ dispatch() ->
 	OAuth2Constraint =
 		{	provider,
 			fun(P) ->
-				lists:member(P, pt_plist:keys(OAuth2Ws))
+				lists:member(P, pt_kvlist:keys(OAuth2Ws))
 			end },
 
 	cowboy_router:compile(

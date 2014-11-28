@@ -83,7 +83,7 @@ pbkdf2(Password, Salt) ->
 -spec basic_qs(map(), Req) -> {Resp, Req} when Resp :: pal:response(), Req :: cowboy_req:req().
 basic_qs(M, Req) ->
 	{ok, Qs, Req2} = cowboy_req:body_qs(Req),
-	case {pt_plist:find(?USERID, Qs), pt_plist:find(?PASSWORD, Qs)} of
+	case {pt_kvlist:find(?USERID, Qs), pt_kvlist:find(?PASSWORD, Qs)} of
 		{undefined, _} ->
 			{undefined, Req2};
 		{_, undefined} ->
