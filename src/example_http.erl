@@ -30,7 +30,6 @@
 	port/0,
 	uri/1,
 	host_url/0,
-	pretty_constraint/1,
 	options/2
 ]).
 
@@ -68,13 +67,6 @@ uri(Path) ->
 -spec host_url() -> binary().
 host_url() ->
 	<<"https://localhost:", (integer_to_binary(port()))/binary>>.
-
--spec pretty_constraint(term()) -> {true, boolean()} | false.
-pretty_constraint(true)        -> {true, true};
-pretty_constraint(<<"true">>)  -> {true, true};
-pretty_constraint(<<"false">>) -> {true, false};
-pretty_constraint(false)       -> {true, false};
-pretty_constraint(_)           -> false.
 
 -spec options(Req, State) -> {ok, Req, State} when Req :: cowboy_req:req(), State :: any().
 options(Req, State) ->

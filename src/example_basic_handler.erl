@@ -34,6 +34,7 @@
 -export([
 	init/2,
 	allowed_methods/2, 
+	malformed_request/2,
 	is_authorized/2,
 	content_types_accepted/2,
 	content_types_provided/2,
@@ -76,20 +77,24 @@ from_any(Req, State) ->
 %% ==================================================================
 
 init(Req, Opts) ->
-	#{pretty := Pretty} =
-		cowboy_req:match_qs(
-			[	{pretty, fun example_http:pretty_constraint/1, false} ],
-			Req),
-
 	State =
 		#state{
-			auth = pt_kvterm:get(auth, Opts),
-			pretty = Pretty},
+			auth = pt_kvterm:get(auth, Opts)},
 
 	{cowboy_rest, Req, State}.
 
 allowed_methods(Req, State) ->
 	{[<<"GET">>, <<"POST">>, <<"OPTIONS">>], Req, State}.
+
+malformed_request(Req, State) ->
+	Constraints = [{pretty, fun example_constraint:boolean/1, false}],
+	try cowboy_req:match_qs(Constraints, Req) of
+		#{pretty := Pretty} ->
+			{false, Req, State#state{pretty = Pretty}}
+	catch
+		_:_ ->
+			{true, Req, State}
+	end.
 
 is_authorized(Req, #state{auth = W} = State) ->
 	case pal:authenticate(Req, W) of
