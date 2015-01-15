@@ -1,7 +1,7 @@
 %% ------------------------------------------------------------------
 %% The MIT License
 %%
-%% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
+%% Copyright (c) 2014-2015 Andrei Nesterov <ae.nesterov@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -22,21 +22,44 @@
 %% IN THE SOFTWARE.
 %% ------------------------------------------------------------------
 
--module(example_constraint).
+-module(example_http_pal).
 
 %% API
 -export([
-	boolean/1
+	handle_result/2
 ]).
 
-%% ===================================================================
-%% API
-%% ===================================================================
+%% Definitions
+-define(CONTENT_TYPE_JSON, {<<"content-type">>, <<"application/json">>}).
 
--spec boolean(binary() | boolean()) -> boolean() | {true, boolean()}.
-boolean(true)        -> true;
-boolean(false)       -> true;
-boolean(<<"true">>)  -> {true, true};
-boolean(<<"false">>) -> {true, false};
-boolean(_)           -> false.
+%% ==================================================================
+%% API
+%% ==================================================================
+
+-spec handle_result(pal_workflow:result(), cowboy_req:req()) -> cowboy_req:req().
+handle_result({stop, Resp}, Req) ->
+	pal_http:reply(Resp, fun(Status, Headers, Body) ->
+		cowboy_req:reply(Status, Headers, Body, Req)
+	end);
+handle_result({error, {_Type, Data}}, Req) ->
+	cowboy_req:reply(
+		422,
+		[?CONTENT_TYPE_JSON],
+		error_to_json(Data),
+		Req);
+handle_result({ok, Data}, Req) ->
+	cowboy_req:reply(
+		200,
+		[?CONTENT_TYPE_JSON],
+		jsxn:encode(Data),
+		Req).
+
+%% ==================================================================
+%% Internal functions
+%% ==================================================================
+
+-spec error_to_json(any()) -> binary().
+error_to_json(M) when is_map(M)  -> jsxn:encode(M);
+error_to_json(L) when is_list(L) -> jsx:encode(L);
+error_to_json(T)                 -> jsx:encode([{error, T}]).
 

@@ -39,15 +39,14 @@
 
 -spec start() -> {ok, pid()} | {error, term()}.
 start() ->
-	cowboy:start_https(http_listner, 100,
+	cowboy:start_https(
+		http_listner,
+		100,
 		[	{port, port()},
 			{cacertfile, application:get_env(cas, cacertfile, "priv/ssl/pal-ca.crt")},
 			{certfile, application:get_env(cas, certfile, "priv/ssl/pal.crt")},
 			{keyfile, application:get_env(cas, keyfile, "priv/ssl/pal.key")} ],
-		[	{env,
-			[	{dispatch, dispatch()},
-				{pt_cowboy_session, session()} ]},
-			{middlewares, [pt_cowboy_session, cowboy_router, cowboy_handler]} ]).
+		[	{env, [{dispatch, dispatch()}]} ]).
 
 -spec port() -> integer().
 port() ->
@@ -81,7 +80,6 @@ options(Req, State) ->
 
 -spec dispatch() -> cowboy_router:dispatch_rules().
 dispatch() ->
-	BasicW = example_basic:auth(),
 	OAuth2Ws = example_oauth2:auth(),
 	OAuth2Constraint =
 		{	provider,
@@ -89,14 +87,7 @@ dispatch() ->
 				lists:member(P, pt_kvlist:keys(OAuth2Ws))
 			end },
 
-	cowboy_router:compile(
-		[	{'_',
-				[	{"/examples/basic", example_basic_handler, [{auth, BasicW}]},
-					{"/examples/oauth2/:provider/[callback]", [OAuth2Constraint], example_oauth2_handler, [{auth, OAuth2Ws}]} ]} ]).
-
--spec session() -> pt_cowboy_session:initializer().
-session() ->
-	GenF = fun() -> uuid:uuid_to_string(uuid:get_v4(), binary_nodash) end,
-	pt_cowboy_session:init(
-		pt_session_memory_store:init(GenF)).
+	cowboy_router:compile([{'_', [
+		{"/examples/oauth2/:provider/[callback]", [OAuth2Constraint], example_oauth2_handler, [{auth, OAuth2Ws}]}
+	]}]).
 

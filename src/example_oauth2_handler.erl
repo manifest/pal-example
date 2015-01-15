@@ -43,17 +43,16 @@
 
 %% Types
 -record(state, {
-	auth :: pal:workflow(),
-	user :: map()
+	authg :: pal:workflow(),
+	authm :: map()
 }).
 
 %% ===================================================================
 %% API
 %% ===================================================================
 
-to_json(Req, #state{user = User} = State) ->
-	Body = example:to_json(User, true),
-	{Body, Req, State}.
+to_json(Req, #state{authm = M} = State) ->
+	{jsx:prettify(jsxn:encode(M)), Req, State}.
 
 %% ==================================================================
 %% REST handler callbacks
@@ -63,19 +62,30 @@ init(Req, Opts) ->
 	Provider = cowboy_req:binding(provider, Req),
 	State =
 		#state{
-			auth = pt_kvlist:get_in([auth, Provider], Opts)},
+			authg = pt_kvlist:get_in([auth, Provider], Opts)},
 
 	{cowboy_rest, Req, State}.
 
 allowed_methods(Req, State) ->
 	{[<<"GET">>, <<"OPTIONS">>], Req, State}.
 
-is_authorized(Req, #state{auth = W} = State) ->
-	case pal:authenticate(Req, W) of
-		{M, Req2} when is_map(M) ->
-			{true, Req2, State#state{user = M}};
-		{stop, Req2} ->
-			{stop, Req2, State}
+is_authorized(Req, #state{authg = Group} = State) ->
+	%% Retrieving "code", "state" and "error" fields
+	%% from the query string of request if any of them appears.
+	Data =
+		lists:foldl(
+			fun({Key, Val}, M) ->
+				maps:put(binary_to_existing_atom(Key, utf8), Val, M)
+			end,
+			#{},
+			pt_kvlist:with(
+				[<<"code">>, <<"state">>, <<"error">>],
+				cowboy_req:parse_qs(Req))),
+
+	%% Executing an authentication workflow group.
+	case pal:authenticate(Data, Group) of
+		{ok, M} -> {true, Req, State#state{authm = M}};
+		R       -> {stop, example_http_pal:handle_result(R, Req), State}
 	end.
 
 content_types_provided(Req, State) ->

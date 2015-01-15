@@ -48,7 +48,7 @@ CONFIG ?= example
 start: build
 	erl \
 		-pa ebin deps/*/ebin \
-		-eval 'application:ensure_all_started(example)' \
+		-eval 'application:ensure_all_started(example, permanent)' \
 		-boot start_sasl \
 		-sasl errlog_type error \
 		-config ${CONFIG}

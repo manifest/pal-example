@@ -26,12 +26,9 @@
 
 %% API
 -export([
-	auth/0
+	auth/0,
+	callback_uri/1
 ]).
-
-%% Definitions
--define(GOOGLE, <<"google">>).
--define(FACEBOOK, <<"facebook">>).
 
 %% ===================================================================
 %% API
@@ -39,26 +36,20 @@
 
 -spec auth() -> [{binary(), pal:workflow()}].
 auth() ->
-	{ok, ProviderConf} = application:get_env(example, providers),
+	{ok, Conf} = application:get_env(example, oauth2),
+	lists:map(
+		fun({Provider, Ws, Opts}) ->
+			Group =
+				pal:group(
+					Ws,
+					Opts#{
+						redirect_uri => callback_uri(Provider),
+						includes => [uid, credentials, info]}),
 
-	GlobalOpts =
-		#{includes        => [credentials, uid, info],
-			session         => pt_cowboy_session},
+			{Provider, Group}
+		end, Conf).
 
-	GoogleOpts =
-		GlobalOpts
-			#{client_id     => pt_map:get_in([google, client_id], ProviderConf),
-				client_secret => pt_map:get_in([google, client_secret], ProviderConf),
-				redirect_uri  => example_http:uri("/examples/oauth2/google/callback")},
-
-	FacebookOpts =
-		GlobalOpts
-			#{client_id     => pt_map:get_in([facebook, client_id], ProviderConf),
-				client_secret => pt_map:get_in([facebook, client_secret], ProviderConf),
-				redirect_uri  => example_http:uri("/examples/oauth2/facebook/callback")},
-
-	GoogleW = pal:new([pal_google_oauth2_authcode, pal_google_oauth2_people], GoogleOpts),
-	FacebookW = pal:new([pal_facebook_oauth2_authcode, pal_facebook_oauth2_user], FacebookOpts),
-	
-	[{?GOOGLE, GoogleW}, {?FACEBOOK, FacebookW}].
+-spec callback_uri(binary()) -> binary().
+callback_uri(Provider) ->
+	example_http:uri(<<"/examples/oauth2/", Provider/binary, "/callback">>).
 
