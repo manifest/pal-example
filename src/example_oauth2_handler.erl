@@ -24,23 +24,18 @@
 
 -module(example_oauth2_handler).
 
-%% Base handler callbacks
+%% API
 -export([
-	init/3
+	to_json/2
 ]).
 
 %% REST handler callbacks
 -export([
-	options/2,
-	rest_init/2,
+	init/2,
 	allowed_methods/2, 
 	is_authorized/2,
-	content_types_provided/2
-]).
-
-%% API
--export([
-	to_json/2
+	content_types_provided/2,
+	options/2
 ]).
 
 %% Definitions
@@ -48,51 +43,54 @@
 
 %% Types
 -record(state, {
-	auth :: pal:workflow(),
-	user :: map()
+	authg :: pal:workflow(),
+	authm :: map()
 }).
-
-%% ==================================================================
-%% Base handler callbacks
-%% ==================================================================
-
-init(_Transport, _Req, _Opts) ->
-	{upgrade, protocol, cowboy_rest}.
-
-%% ==================================================================
-%% REST handler callbacks
-%% ==================================================================
-
-rest_init(Req, Opts) ->
-	{Provider, Req2} = cowboy_req:binding(provider, Req),
-	State =
-		#state{
-			auth = pt_plist:get_in([auth, Provider], Opts)},
-
-	{ok, Req2, State}.
-
-allowed_methods(Req, State) ->
-	{[<<"GET">>, <<"OPTIONS">>], Req, State}.
-
-is_authorized(Req, #state{auth = W} = State) ->
-	case pal:authenticate(Req, W) of
-		{M, Req2} when is_map(M) ->
-			{true, Req2, State#state{user = M}};
-		{halt, Req2} ->
-			{halt, Req2, State}
-	end.
-
-options(Req, State) ->
-	example:options(Req, State).
-
-content_types_provided(Req, State) ->
-	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
 
 %% ===================================================================
 %% API
 %% ===================================================================
 
-to_json(Req, #state{user = User} = State) ->
-	Body = example:to_json(User, true),
-	{Body, Req, State}.
+to_json(Req, #state{authm = M} = State) ->
+	{jsx:prettify(jsxn:encode(M)), Req, State}.
+
+%% ==================================================================
+%% REST handler callbacks
+%% ==================================================================
+
+init(Req, Opts) ->
+	Provider = cowboy_req:binding(provider, Req),
+	State =
+		#state{
+			authg = pt_kvlist:get_in([auth, Provider], Opts)},
+
+	{cowboy_rest, Req, State}.
+
+allowed_methods(Req, State) ->
+	{[<<"GET">>, <<"OPTIONS">>], Req, State}.
+
+is_authorized(Req, #state{authg = Group} = State) ->
+	%% Retrieving "code", "state" and "error" fields
+	%% from the query string of request if any of them appears.
+	Data =
+		lists:foldl(
+			fun({Key, Val}, M) ->
+				maps:put(binary_to_existing_atom(Key, utf8), Val, M)
+			end,
+			#{},
+			pt_kvlist:with(
+				[<<"code">>, <<"state">>, <<"error">>],
+				cowboy_req:parse_qs(Req))),
+
+	%% Executing an authentication workflow group.
+	case pal:authenticate(Data, Group) of
+		{ok, M} -> {true, Req, State#state{authm = M}};
+		R       -> {stop, example_http_pal:handle_result(R, Req), State}
+	end.
+
+content_types_provided(Req, State) ->
+	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
+
+options(Req, State) ->
+	example_http:options(Req, State).
 

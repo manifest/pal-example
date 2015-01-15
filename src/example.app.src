@@ -1,15 +1,12 @@
 {application, example, [
-	{description, "Pragmatic Authentication Library: example"},
+	{description, "Pragmatic Authentication Library: Cowboy example"},
 	{vsn, "0.1.0"},
 	{modules, []},
 	{registered, []},
 	{applications, [
 		kernel,
 		stdlib,
-		jsxn,
 		cowboy,
-		pbkdf2,
-		pt_cowboy_session,
 		pal_google_oauth2,
 		pal_facebook_oauth2
 	]},

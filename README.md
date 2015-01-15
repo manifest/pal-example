@@ -1,46 +1,42 @@
-# Pragmatic Authentication Library: example
+# Pragmatic Authentication Library: Cowboy example
 
-example of using Pragmatic Authentication Library in Cowboy web application
+The example using Pragmatic Authentication Library with Cowboy HTTP server.
 
 ### Overview
 
-The example project contains examples of authentication via:
+The project contains examples of authentication via:
 
 - Google
 - Facebook
-- HTTP Basic Access Authentication
 
-In case of executing Google and Facebook examples you need to:
+To execute the examples on the your local machine you have to:
 
-- register an Google application at [Developers Console][google-developer-console]
-- register an Facebook application at [App Dashboard][facebook-app-dashboard]
-- setting up `client_id` and `client_secret` in the `example.config` for each provider
+- Register an Google application at [Developers Console][google-developer-console].
+- Register an Facebook application at [App Dashboard][facebook-app-dashboard].
+- Specify the `client_id` and the `client_secret` in the `example.config` for each provider.
 
 ### Getting started
 
-1. You need to install [rebar][rebar] for getting and building sources.
+1. You need to install [rebar][rebar] to be able get and build project from code sources.
 
-2. Get dependencies:
+2. Getting dependencies:
 
 			$ make deps
 
-3. Start an example application:
+3. Starting an example application:
 
 			$ make start
 
-4. Open the URL of example in your browser:
+4. Open the URI in your browser:
 
 	- Google: `https://localhost:8081/examples/oauth2/google`
 	- Facebook: `https://localhost:8081/examples/oauth2/facebook`
-	- HTTP Basic Access Authentication: `https://john:123@localhost:8081/examples/basic?pretty=true`
-
-### Documentation
 
 See [pal][pal] project for more information.
 
 ### License
 
-Provided under the terms of [the MIT license][license].
+The source code is provided under the terms of [the MIT license][license].
 
 [license]:http://www.opensource.org/licenses/MIT
 [google-developer-console]:https://console.developers.google.com
