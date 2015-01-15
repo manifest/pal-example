@@ -34,7 +34,7 @@
 %% API
 %% ===================================================================
 
--spec auth() -> [{binary(), pal:workflow()}].
+-spec auth() -> [{binary(), pal:group()}].
 auth() ->
 	{ok, Conf} = application:get_env(example, oauth2),
 	lists:map(
