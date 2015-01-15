@@ -1,6 +1,6 @@
 {application, example, [
 	{description, "Pragmatic Authentication Library: Cowboy example"},
-	{vsn, "0.1.0"},
+	{vsn, "0.2.0"},
 	{modules, []},
 	{registered, []},
 	{applications, [
