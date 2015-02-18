@@ -22,7 +22,7 @@
 %% IN THE SOFTWARE.
 %% ----------------------------------------------------------------------------
 
--module(example_app).
+-module(pal_example_app).
 -behaviour(application).
 
 %% Application callbacks
@@ -36,8 +36,8 @@
 %% =============================================================================
 
 start(_StartType, _StartArgs) ->
-	{ok, _Pid} = example_http:start(),
-	example_sup:start_link().
+	{ok, _Pid} = pal_example_http:start(),
+	pal_example_sup:start_link().
 
 stop(_State) ->
 	ok.

@@ -22,12 +22,13 @@
 %% IN THE SOFTWARE.
 %% ----------------------------------------------------------------------------
 
--module(example_http).
+-module(pal_example_http).
 
 %% API
 -export([
 	start/0,
 	port/0,
+	ssl_options/0,
 	uri/1,
 	host_url/0,
 	options/2
@@ -42,20 +43,23 @@ start() ->
 	cowboy:start_https(
 		http_listner,
 		100,
-		[	{port, port()},
-			{cacertfile, application:get_env(cas, cacertfile, "priv/ssl/pal-ca.crt")},
-			{certfile, application:get_env(cas, certfile, "priv/ssl/pal.crt")},
-			{keyfile, application:get_env(cas, keyfile, "priv/ssl/pal.key")} ],
+		[	{port, port()} | ssl_options() ],
 		[	{env, [{dispatch, dispatch()}]} ]).
 
 -spec port() -> integer().
 port() ->
 	case os:getenv("PORT") of
-		false ->
-			application:get_env(application:get_application(), http_port, 8081);
-		Port ->
-			list_to_integer(Port)
+		false -> application:get_env(pal_example, http_port, 8081);
+		Port  -> list_to_integer(Port)
 	end.
+
+-spec ssl_options() -> list().
+ssl_options() ->
+	Dir = code:priv_dir(pal_example),
+	Path = fun(File) -> Dir ++ "/ssl/" ++ File end,
+	[	{cacertfile, application:get_env(cas, cacertfile, Path("pal-ca.crt"))},
+		{certfile, application:get_env(cas, certfile, Path("pal.crt"))},
+		{keyfile, application:get_env(cas, keyfile, Path("pal.key"))} ].
 
 -spec uri(string() | binary()) -> binary().
 uri(Path) when is_list(Path) ->
@@ -80,7 +84,7 @@ options(Req, State) ->
 
 -spec dispatch() -> cowboy_router:dispatch_rules().
 dispatch() ->
-	OAuth2Ws = example_oauth2:auth(),
+	OAuth2Ws = pal_example_oauth2:auth(),
 	OAuth2Constraint =
 		{	provider,
 			fun(P) ->
@@ -88,6 +92,6 @@ dispatch() ->
 			end },
 
 	cowboy_router:compile([{'_', [
-		{"/examples/oauth2/:provider/[callback]", [OAuth2Constraint], example_oauth2_handler, [{auth, OAuth2Ws}]}
+		{"/examples/oauth2/:provider/[callback]", [OAuth2Constraint], pal_example_oauth2_handler, [{auth, OAuth2Ws}]}
 	]}]).
 

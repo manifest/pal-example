@@ -22,7 +22,7 @@
 %% IN THE SOFTWARE.
 %% ----------------------------------------------------------------------------
 
--module(example_oauth2_handler).
+-module(pal_example_oauth2_handler).
 
 %% API
 -export([
@@ -85,12 +85,12 @@ is_authorized(Req, #state{authg = Group} = State) ->
 	%% Executing an authentication workflow group.
 	case pal:authenticate(Data, Group) of
 		{ok, M} -> {true, Req, State#state{authm = M}};
-		R       -> {stop, example_http_pal:handle_result(R, Req), State}
+		R       -> {stop, pal_example_http_misc:handle_result(R, Req), State}
 	end.
 
 content_types_provided(Req, State) ->
 	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
 
 options(Req, State) ->
-	example_http:options(Req, State).
+	pal_example_http:options(Req, State).
 

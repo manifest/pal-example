@@ -22,30 +22,34 @@
 %% IN THE SOFTWARE.
 %% ----------------------------------------------------------------------------
 
--module(example_sup).
-
--behaviour(supervisor).
+-module(pal_example_oauth2).
 
 %% API
--export([start_link/0]).
-
-%% Supervisor callbacks
--export([init/1]).
-
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+-export([
+	auth/0,
+	callback_uri/1
+]).
 
 %% =============================================================================
-%% API functions
+%% API
 %% =============================================================================
 
-start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+-spec auth() -> [{binary(), pal:group()}].
+auth() ->
+	{ok, Conf} = application:get_env(pal_example, oauth2),
+	lists:map(
+		fun({Provider, Ws, Opts}) ->
+			Group =
+				pal:group(
+					Ws,
+					Opts#{
+						redirect_uri => callback_uri(Provider),
+						includes => [uid, credentials, info]}),
 
-%% =============================================================================
-%% Supervisor callbacks
-%% =============================================================================
+			{Provider, Group}
+		end, Conf).
 
-init([]) ->
-	{ok, { {one_for_one, 5, 10}, []} }.
+-spec callback_uri(binary()) -> binary().
+callback_uri(Provider) ->
+	pal_example_http:uri(<<"/examples/oauth2/", Provider/binary, "/callback">>).
 
