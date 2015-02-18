@@ -19,7 +19,7 @@ To execute the examples on the your local machine you need to:
 
 1. Build and start the application:
 
-			$ make && ./_rel/pal_example/bin/pal_example console
+		$ make && ./_rel/pal_example/bin/pal_example console
 
 2. Open the URI in your browser:
 
