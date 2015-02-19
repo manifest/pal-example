@@ -1,4 +1,4 @@
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 %% The MIT License
 %%
 %% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
@@ -20,36 +20,25 @@
 %% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 %% IN THE SOFTWARE.
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 
--module(example_oauth2).
+-module(pal_example_app).
+-behaviour(application).
 
-%% API
+%% Application callbacks
 -export([
-	auth/0,
-	callback_uri/1
+	start/2,
+	stop/1
 ]).
 
-%% ===================================================================
-%% API
-%% ===================================================================
+%% =============================================================================
+%% Application callbacks
+%% =============================================================================
 
--spec auth() -> [{binary(), pal:group()}].
-auth() ->
-	{ok, Conf} = application:get_env(example, oauth2),
-	lists:map(
-		fun({Provider, Ws, Opts}) ->
-			Group =
-				pal:group(
-					Ws,
-					Opts#{
-						redirect_uri => callback_uri(Provider),
-						includes => [uid, credentials, info]}),
+start(_StartType, _StartArgs) ->
+	{ok, _Pid} = pal_example_http:start(),
+	pal_example_sup:start_link().
 
-			{Provider, Group}
-		end, Conf).
-
--spec callback_uri(binary()) -> binary().
-callback_uri(Provider) ->
-	example_http:uri(<<"/examples/oauth2/", Provider/binary, "/callback">>).
+stop(_State) ->
+	ok.
 

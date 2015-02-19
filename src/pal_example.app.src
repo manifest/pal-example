@@ -1,15 +1,16 @@
-{application, example, [
+{application, pal_example, [
 	{description, "Pragmatic Authentication Library: Cowboy example"},
-	{vsn, "0.2.0"},
+	{vsn, "0.2.1"},
+	{id, "git"},
 	{modules, []},
 	{registered, []},
 	{applications, [
 		kernel,
 		stdlib,
-		cowboy,
 		pal_google_oauth2,
-		pal_facebook_oauth2
+		pal_facebook_oauth2,
+		cowboy
 	]},
-	{mod, { example_app, []}},
+	{mod, {pal_example_app, []}},
 	{env, []}
 ]}.

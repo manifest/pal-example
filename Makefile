@@ -1,55 +1,17 @@
-.PHONY: all deps build build-plt dialyze test test-total doc clean distclean start
+PROJECT = pal_example
 
-all: build
+DEPS = pal_google_oauth2 pal_facebook_oauth2 cowboy
+dep_pal_google_oauth2 = git git://github.com/manifest/pal-google-oauth2.git v0.2.1
+dep_pal_facebook_oauth2 = git git://github.com/manifest/pal-facebook-oauth2.git v0.2.1
+dep_cowboy = git git://github.com/extend/cowboy.git d2205d9ea6aa71ff256c48667755676d0e6c2377
 
-deps:
-	rebar get-deps
+PLT_APPS = pt pal jsx
+SHELL_OPTS = \
+	-eval 'application:ensure_all_started($(PROJECT), permanent)' \
+	-config $(CONFIG)
 
+include erlang.mk
 include ranch-ssl-patch.mk
-build: ranch-ssl-patch
-	rebar compile
 
-build-plt:
-	rm -vf .dialyzer_plt
-	dialyzer \
-		--build_plt \
-		--output_plt .dialyzer_plt \
-		--apps erts kernel stdlib crypto public_key ssl inets \
-		`find deps -d 1 -type d`
-
-dialyze:
-	dialyzer \
-		--src src \
-		--plt .dialyzer_plt \
-		--no_native \
-		-Werror_handling \
-		-Wrace_conditions \
-		-Wunmatched_returns 
-
-xref:
-	rebar xref skip_deps=true
-
-test: build
-	rebar eunit -v skip_deps=true
-
-test-total: test xref dialyze
-
-doc:
-	rebar doc skip_deps=true
-
-clean:
-	rebar clean
-
-distclean: clean
-	rebar delete-deps
-
-CONFIG ?= example
-
-start: build
-	erl \
-		-pa ebin deps/*/ebin \
-		-eval 'application:ensure_all_started(example, permanent)' \
-		-boot start_sasl \
-		-sasl errlog_type error \
-		-config ${CONFIG}
-
+deps::
+	@sed -e "s/\(stdlib\$\)/\1,ssl/g" -i.back deps/ranch/src/ranch.app.src

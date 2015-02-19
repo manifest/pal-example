@@ -1,4 +1,4 @@
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 %% The MIT License
 %%
 %% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
@@ -20,25 +20,32 @@
 %% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 %% IN THE SOFTWARE.
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 
--module(example_app).
--behaviour(application).
+-module(pal_example_sup).
 
-%% Application callbacks
--export([
-	start/2,
-	stop/1
-]).
+-behaviour(supervisor).
 
-%% ===================================================================
-%% Application callbacks
-%% ===================================================================
+%% API
+-export([start_link/0]).
 
-start(_StartType, _StartArgs) ->
-	{ok, _Pid} = example_http:start(),
-	example_sup:start_link().
+%% Supervisor callbacks
+-export([init/1]).
 
-stop(_State) ->
-	ok.
+%% Helper macro for declaring children of supervisor
+-define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+
+%% =============================================================================
+%% API functions
+%% =============================================================================
+
+start_link() ->
+	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
+%% =============================================================================
+%% Supervisor callbacks
+%% =============================================================================
+
+init([]) ->
+	{ok, { {one_for_one, 5, 10}, []} }.
 

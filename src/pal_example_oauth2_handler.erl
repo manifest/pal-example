@@ -1,4 +1,4 @@
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 %% The MIT License
 %%
 %% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
@@ -20,9 +20,9 @@
 %% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 %% IN THE SOFTWARE.
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 
--module(example_oauth2_handler).
+-module(pal_example_oauth2_handler).
 
 %% API
 -export([
@@ -47,16 +47,16 @@
 	authm :: map()
 }).
 
-%% ===================================================================
+%% =============================================================================
 %% API
-%% ===================================================================
+%% =============================================================================
 
 to_json(Req, #state{authm = M} = State) ->
-	{jsx:prettify(jsxn:encode(M)), Req, State}.
+	{jsx:prettify(jsx:encode(M)), Req, State}.
 
-%% ==================================================================
+%% ============================================================================
 %% REST handler callbacks
-%% ==================================================================
+%% ============================================================================
 
 init(Req, Opts) ->
 	Provider = cowboy_req:binding(provider, Req),
@@ -85,12 +85,12 @@ is_authorized(Req, #state{authg = Group} = State) ->
 	%% Executing an authentication workflow group.
 	case pal:authenticate(Data, Group) of
 		{ok, M} -> {true, Req, State#state{authm = M}};
-		R       -> {stop, example_http_pal:handle_result(R, Req), State}
+		R       -> {stop, pal_example_http_misc:handle_result(R, Req), State}
 	end.
 
 content_types_provided(Req, State) ->
 	{[{{<<"application">>,  <<"json">>, '*'}, to_json}], Req, State}.
 
 options(Req, State) ->
-	example_http:options(Req, State).
+	pal_example_http:options(Req, State).
 
