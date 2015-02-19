@@ -14,4 +14,3 @@ include ranch-ssl-patch.mk
 
 deps::
 	sed -e "s/\(stdlib\$\)/\1,ssl/g" -i.back deps/ranch/src/ranch.app.src
-

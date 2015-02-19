@@ -1,6 +1,6 @@
 {application, pal_example, [
 	{description, "Pragmatic Authentication Library: Cowboy example"},
-	{vsn, "0.1.0"},
+	{vsn, "0.3.0"},
 	{id, "git"},
 	{modules, []},
 	{registered, []},
@@ -12,6 +12,6 @@
 		cowboy,
 		jsxn
 	]},
-	{mod, { pal_example_app, []}},
+	{mod, {pal_example_app, []}},
 	{env, []}
 ]}.
