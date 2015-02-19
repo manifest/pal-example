@@ -52,7 +52,7 @@
 %% =============================================================================
 
 to_json(Req, #state{authm = M} = State) ->
-	{jsx:prettify(jsxn:encode(M)), Req, State}.
+	{jsx:prettify(jsx:encode(M)), Req, State}.
 
 %% ============================================================================
 %% REST handler callbacks

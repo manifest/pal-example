@@ -9,8 +9,7 @@
 		stdlib,
 		pal_google_oauth2,
 		pal_facebook_oauth2,
-		cowboy,
-		jsxn
+		cowboy
 	]},
 	{mod, {pal_example_app, []}},
 	{env, []}

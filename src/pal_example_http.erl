@@ -55,7 +55,11 @@ port() ->
 
 -spec ssl_options() -> list().
 ssl_options() ->
-	Dir = code:priv_dir(pal_example),
+	Dir =
+		case code:priv_dir(pal_example) of
+			{error, _} -> element(2, application:get_env(pal_example, dev_priv_dir));
+			Val        -> Val
+		end,
 	Path = fun(File) -> Dir ++ "/ssl/" ++ File end,
 	[	{cacertfile, application:get_env(cas, cacertfile, Path("pal-ca.crt"))},
 		{certfile, application:get_env(cas, certfile, Path("pal.crt"))},
